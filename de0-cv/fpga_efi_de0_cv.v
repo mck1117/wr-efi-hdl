@@ -8,9 +8,9 @@ module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1);
 	pll_spi p1(CLOCK_50, 1'b0, clk_spi);		// Generates clock for SPI, 100mhz
 	pll_mcu p3(CLOCK2_50, 1'b0, GPIO_1[5], GPIO_1[7]);	// Generates STM32 clock input
 	
-	// divide SPI clock / 50
+	// divide SPI clock / 50, 7 bit counter
 	// clk_efi = 2mhz
-	clk_div #(50) (clk_spi, clk_efi);
+	clk_div #(50, 7) (clk_spi, clk_efi);
 	
 	wire vrout;
 	assign GPIO_1[10] = vrout;

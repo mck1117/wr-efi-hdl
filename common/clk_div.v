@@ -1,11 +1,12 @@
 module clk_div(clk_in, clk_out);
 	parameter RATIO = 100;
+	parameter BITS = 7;
 	
 	input clk_in;
 	output reg clk_out;
 	initial clk_out = 0;
 	
-	reg [7:0] cnt;
+	reg [BITS - 1:0] cnt;
 	
 	initial cnt = 0;
 	
