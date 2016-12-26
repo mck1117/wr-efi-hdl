@@ -1,5 +1,5 @@
-module efi_main(clk, reset, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
-	input clk, reset, vrin;
+module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
+	input clk, reset_n, vrin;
 	output ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced;
 
 	
@@ -27,7 +27,7 @@ module efi_main(clk, reset, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, in
 	wire spi_wr_en;
 	
 	always @(posedge clk_spi) begin
-		if(reset) begin
+		if(~reset_n) begin
 				spi_input_regs[0] = 16'b000_0000_00_11_0111;
 				spi_input_regs[1] = 16'd60;
 				spi_input_regs[2] = 16'd128;
