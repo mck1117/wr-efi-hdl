@@ -1,5 +1,5 @@
-module ign_driver(clk, en, trigger, eng_phase, ign_timing, dwell_angle, cyl_phase, spk_out, next_tooth_width, tooth_period, quanta_per_revolution);	
-	input clk, en, trigger;
+module ign_driver(clk, reset_n, en, trigger, eng_phase, ign_timing, dwell_angle, cyl_phase, spk_out, next_tooth_width, tooth_period, quanta_per_revolution);	
+	input clk, reset_n, en, trigger;
 	
 	input [15:0] eng_phase;
 	input [15:0] ign_timing;
@@ -47,9 +47,9 @@ module ign_driver(clk, en, trigger, eng_phase, ign_timing, dwell_angle, cyl_phas
 	wire spk_charge, spk_fire;
 	
 	// Timer to charge
-	ign_timer timer_charge(clk, trigger, dwell_timing_actual, eng_phase, next_tooth_width, tooth_period, spk_charge);
+	ign_timer timer_charge(clk, reset_n, trigger, dwell_timing_actual, eng_phase, next_tooth_width, tooth_period, spk_charge);
 	// Timer to fire
-	ign_timer timer_fire(clk, trigger, ign_timing_actual, eng_phase, next_tooth_width, tooth_period, spk_fire);
+	ign_timer timer_fire(clk, reset_n, trigger, ign_timing_actual, eng_phase, next_tooth_width, tooth_period, spk_fire);
 	
 	// If EN is low, force spark firing (keep low to not burn coil)
 	rs_latch ign_latch(spk_fire | ~en, spk_charge, spk_out);

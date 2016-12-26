@@ -11,14 +11,25 @@ module tb_efi();
 	wire ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs;
 	
 	
+	reg rst_n;
+	
+	
+	
 	sync_faker sfaker(clk_efi, vrin);
-	efi_main dut(.clk(clk_efi), .reset(1'b1), .clk_spi(clk_spi),
+	efi_main dut(.clk(clk_efi), .reset_n(rst_n), .clk_spi(clk_spi),
 				 .vrin(vrin),
 				 .ign_a(ign_a), .ign_b(ign_b), .ign_c(ign_c), .ign_d(ign_d),
 				 .inj_a(inj_a), .inj_b(inj_b), 
 				 .synced(synced));
 	
 
+	initial begin
+		rst_n = 0;
+		#91366000 rst_n = 1;
+	end
+	
+	
+	
 	initial begin
 		while(1) begin
 			#10 clk_spi = 0;

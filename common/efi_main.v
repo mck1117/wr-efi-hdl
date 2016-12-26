@@ -2,12 +2,21 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	input clk, reset_n, vrin;
 	output ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced;
 
-	
 	input clk_spi;
 	
 	input sck, mosi, cs;
 	output miso;
 	
+	
+	// ***********************************
+	//    Latch reset_n to internal reset
+	// ***********************************
+	
+	reg reset_internal = 1;
+	
+	always @(posedge clk) begin
+		reset_internal <= reset_n;
+	end
 	
 	
 	// ***********************************
@@ -27,7 +36,7 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire spi_wr_en;
 	
 	always @(posedge clk_spi) begin
-		if(~reset_n) begin
+		if(~reset_internal) begin
 				spi_input_regs[0] = 16'b000_0000_00_11_0111;
 				spi_input_regs[1] = 16'd60;
 				spi_input_regs[2] = 16'd128;
@@ -110,7 +119,7 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire [15:0] next_tooth_length_deg;
 	wire [31:0] tooth_period;
 	
-	sync synchronizer(clk, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_tooth_width, conf_teeth_missing, conf_trigger_offset);
+	sync synchronizer(clk, reset_internal, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_tooth_width, conf_teeth_missing, conf_trigger_offset);
 	
 	// ***********************************
 	//          Ignition Drivers
@@ -124,17 +133,17 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	assign ign_c = distributor_mode ? 1'b0 : ign_c_internal;
 	assign ign_d = distributor_mode ? 1'b0 : ign_d_internal;
 	
-	ign_driver ignm_a(clk, synced & en_ign[0], trigger, eng_phase, ign_timing, dwell, ign_phase_a, ign_a_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
-	ign_driver ignm_b(clk, synced & en_ign[1], trigger, eng_phase, ign_timing, dwell, ign_phase_b, ign_b_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
-	ign_driver ignm_c(clk, synced & en_ign[2], trigger, eng_phase, ign_timing, dwell, ign_phase_c, ign_c_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
-	ign_driver ignm_d(clk, synced & en_ign[3], trigger, eng_phase, ign_timing, dwell, ign_phase_d, ign_d_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
+	ign_driver ignm_a(clk, reset_internal, synced & en_ign[0], trigger, eng_phase, ign_timing, dwell, ign_phase_a, ign_a_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
+	ign_driver ignm_b(clk, reset_internal, synced & en_ign[1], trigger, eng_phase, ign_timing, dwell, ign_phase_b, ign_b_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
+	ign_driver ignm_c(clk, reset_internal, synced & en_ign[2], trigger, eng_phase, ign_timing, dwell, ign_phase_c, ign_c_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
+	ign_driver ignm_d(clk, reset_internal, synced & en_ign[3], trigger, eng_phase, ign_timing, dwell, ign_phase_d, ign_d_internal, next_tooth_length_deg, tooth_period, conf_quanta_per_rev);
 	
 	// ***********************************
 	//          Injector Drivers
 	// ***********************************
 	
-	inj_driver injm_a(clk, synced & en_inj[0], trigger, eng_phase, 1'b0, {16'd0, inj_a_pw}, inj_a);
-	inj_driver injm_b(clk, synced & en_inj[1], trigger, eng_phase, 1'b0, {16'd0, inj_b_pw}, inj_b);
+	inj_driver injm_a(clk, reset_internal, synced & en_inj[0], trigger, eng_phase, 1'b0, {16'd0, inj_a_pw}, inj_a);
+	inj_driver injm_b(clk, reset_internal, synced & en_inj[1], trigger, eng_phase, 1'b0, {16'd0, inj_b_pw}, inj_b);
 	
 	
 	
