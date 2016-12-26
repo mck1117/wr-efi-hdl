@@ -2,19 +2,29 @@
 
 module tb_efi();
 	// Generated signals
-	reg vrin;
+	wire vrin;
 	reg clk_spi, clk_efi;
+	
+	initial clk_spi = 0;
 	
 	// Output signals
 	wire ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs;
 	
-	efi_main dut(clk_efi, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
 	
+	sync_faker sfaker(clk_efi, vrin);
+	efi_main dut(.clk(clk_efi), .reset(1'b1), .clk_spi(clk_spi),
+				 .vrin(vrin),
+				 .ign_a(ign_a), .ign_b(ign_b), .ign_c(ign_c), .ign_d(ign_d),
+				 .inj_a(inj_a), .inj_b(inj_b), 
+				 .synced(synced),
+				 .distributor_mode(1'b0));
+	
+
 	initial begin
-		//while(1) begin
-		//	#2.5 clk_spi = 0;
-		//	#2.5 clk_spi = 1;
-		//end
+		while(1) begin
+			#10 clk_spi = 0;
+			#10 clk_spi = 1;
+		end
 	end
 	
 	initial begin
@@ -26,7 +36,7 @@ module tb_efi();
 	
 	
 	
-	
+	/*
 	integer i, j;
 	integer q;
 	
@@ -64,5 +74,5 @@ module tb_efi();
 			#q vrin = 0;
 		end
 	end
-	
+	*/
 endmodule

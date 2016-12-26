@@ -1,5 +1,5 @@
-module efi_main(clk, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
-	input clk, vrin;
+module efi_main(clk, reset, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
+	input clk, reset, vrin;
 	output ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced;
 
 	
@@ -27,7 +27,29 @@ module efi_main(clk, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, sy
 	wire spi_wr_en;
 	
 	always @(posedge clk_spi) begin
-		if(spi_wr_en) spi_input_regs[spi_addr] <= spi_data_in;
+		if(reset) begin
+				spi_input_regs[0] = 16'b000_0000_00_11_0111;
+				spi_input_regs[1] = 16'd60;
+				spi_input_regs[2] = 16'd128;
+				spi_input_regs[3] = 16'd2;
+				spi_input_regs[4] = 16'd0;
+				spi_input_regs[5] = 16'd7680;
+				spi_input_regs[6] = 16'd0;		// phase a
+				spi_input_regs[7] = 16'd2560;	// phase b
+				spi_input_regs[8] = 16'd5120;	// phase c
+				spi_input_regs[9] = 16'd0;
+				
+				spi_input_regs[10] = 16'd342;	// 10 deg btdc
+				spi_input_regs[11] = 16'd342;  // 4ms deg dwell
+				
+				spi_input_regs[12] = 16'd2000;	// 1ms pulse width
+				spi_input_regs[13] = 16'd0;		// 0ms pulse (disabled)
+				
+				spi_input_regs[14] = 0;
+				spi_input_regs[15] = 0;
+		end else begin
+			if(spi_wr_en) spi_input_regs[spi_addr] <= spi_data_in;
+		end
 	end
 	
 	// Latch SPI input data to avoid combinational path from fast SPI clock to slow EFI clock
@@ -58,25 +80,6 @@ module efi_main(clk, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, sy
 	wire [15:0] dwell;			// Dwell, quanta
 	
 	wire [15:0] inj_a_pw, inj_b_pw;
-	
-	
-	
-	initial spi_input_regs[0] = 16'h17;
-	initial spi_input_regs[1] = 16'd60;
-	initial spi_input_regs[2] = 16'd128;
-	initial spi_input_regs[3] = 16'd2;
-	initial spi_input_regs[4] = 16'd0;
-	initial spi_input_regs[5] = 16'd7680;
-	initial spi_input_regs[6] = 16'd0;		// phase a
-	initial spi_input_regs[7] = 16'd2560;	// phase b
-	initial spi_input_regs[8] = 16'd5120;	// phase c
-	initial spi_input_regs[9] = 16'd0;
-	
-	initial spi_input_regs[10] = 16'd427;	// 20 deg atdc
-	initial spi_input_regs[11] = 16'd960;  // 45 deg dwell
-	
-	initial spi_input_regs[12] = 16'd2000;	// 1ms pulse width
-	initial spi_input_regs[13] = 16'd0;		// 0ms pulse (disabled)
 	
 	
 	assign { distributor_mode, en_inj, en_ign } = spi_input_regs_latched[0][6:0];
