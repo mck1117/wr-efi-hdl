@@ -18,7 +18,7 @@ module inj_driver(clk, en, trigger, eng_phase, mode, on_cycles, inj_out);
 	reg flp = 0;
 	
 	always @(posedge clk) begin
-		if(trigger && eng_phase == 0) begin
+		if(trigger && eng_phase == 0 && on_cycles != 16'd0) begin
 			flp <= ~flp;
 			
 			if(flp) begin		
