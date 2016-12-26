@@ -42,7 +42,8 @@ module sync(clk, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_
 			// Reset count
 			cnt <= 32'd0;
 			
-			trigger <= 1;
+			// Only output trigger if synced
+			trigger <= synced;
 		
 			// Did we get a valid short tooth?
 			if(cnt > expect_min && cnt < expect_max) begin

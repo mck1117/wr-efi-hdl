@@ -15,6 +15,10 @@ module ign_timer(clk, trigger, timing, eng_phase, next_tooth_width, tooth_period
 	reg cnt_running = 0;
 	
 		
+		
+	wire [15:0] quanta_until_expiry = timing - eng_phase;
+		
+		
 	always @(posedge clk) begin
 		out <= 0;
 	
@@ -29,10 +33,10 @@ module ign_timer(clk, trigger, timing, eng_phase, next_tooth_width, tooth_period
 	
 		if(trigger & ~cnt_running) begin
 			// Ignition event will happen before next tooth
-			if(timing > eng_phase && timing <= (eng_phase + next_tooth_width + 2)) begin
+			if(timing > eng_phase && timing <= (eng_phase + next_tooth_width + 20)) begin
 				cnt <= 0;
 				//cnt_trigger = (tooth_period * (timing - (eng_phase << 3))) / 48 - 3;
-				cnt_trigger = ((tooth_period * (timing - eng_phase)) >> 7) - 3;
+				cnt_trigger = ((tooth_period * quanta_until_expiry) >> 7) - 4;
 				cnt_running <= 1;
 			end
 		end

@@ -19,8 +19,11 @@ module ign_driver(clk, en, trigger, eng_phase, ign_timing, dwell_angle, cyl_phas
 	
 	// Correct wraparound on timing
 	always @(*) begin
+		// If timing is very close to 0, then add 360
+		if(ign_timing_uncorrected <= 16'd10) begin
+			ign_timing_actual <= ign_timing_uncorrected + quanta_per_revolution;
 		// If timing is > 360 deg, then subtract 360 deg
-		if(ign_timing_uncorrected >= quanta_per_revolution) begin
+		end else if(ign_timing_uncorrected >= quanta_per_revolution) begin
 			ign_timing_actual <= ign_timing_uncorrected - quanta_per_revolution;
 		end else begin
 			ign_timing_actual <= ign_timing_uncorrected;
@@ -29,8 +32,8 @@ module ign_driver(clk, en, trigger, eng_phase, ign_timing, dwell_angle, cyl_phas
 	
 	// Correct wraparound on dwell timing
 	always @(*) begin
-		// If dwell timing is < 0, add 360 deg
-		if(ign_timing + cyl_phase < dwell_angle) begin
+		// If dwell timing is < 0 (or almost < 0), add 360 deg
+		if(ign_timing + cyl_phase <= dwell_angle + 16'd10) begin
 			dwell_timing_actual <= (ign_timing + quanta_per_revolution) - dwell_angle + cyl_phase;
 		// if dwell timing is >= 360, subtract 360 deg
 		end else if (ign_timing + cyl_phase - dwell_angle >= quanta_per_revolution) begin
