@@ -6,7 +6,7 @@ module sync_faker(clock, vrout);
 	wire clock_slow;
 	
 	
-	clk_div #(30000, 15) divider(clock, clock_slow);
+	clk_div #(1420, 14) divider(clock, clock_slow);
 	
 	
 	

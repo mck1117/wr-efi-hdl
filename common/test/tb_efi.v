@@ -16,8 +16,7 @@ module tb_efi();
 				 .vrin(vrin),
 				 .ign_a(ign_a), .ign_b(ign_b), .ign_c(ign_c), .ign_d(ign_d),
 				 .inj_a(inj_a), .inj_b(inj_b), 
-				 .synced(synced),
-				 .distributor_mode(1'b0));
+				 .synced(synced));
 	
 
 	initial begin
