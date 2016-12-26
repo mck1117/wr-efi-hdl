@@ -1,5 +1,8 @@
-module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1);
+module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1, LEDR, KEY);
 	input CLOCK_50, CLOCK2_50;
+	
+	input [3:0] KEY;
+	output [9:0] LEDR;
 	
 	inout [35:0]GPIO_1;
 	
@@ -17,8 +20,14 @@ module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1);
 	
 	sync_faker(clk_efi, vrout);
 	
-	efi_main ctrl(.clk(clk_efi), .clk_spi(clk_spi),
-					 // .vrin(GPIO_1[10]),
+	
+	assign LEDR[3:0] = { GPIO_1[13], GPIO_1[14], GPIO_1[11], GPIO_1[12]};
+	assign LEDR[5:4] = { GPIO_1[32], GPIO_1[31] };
+
+	
+	
+	efi_main ctrl(.clk(clk_efi), .clk_spi(clk_spi), .reset(KEY[0]),
+					  // .vrin(GPIO_1[10]),
 					  .vrin(vrout),
 					  .ign_a(GPIO_1[12]), .ign_b(GPIO_1[11]), .ign_c(GPIO_1[14]), .ign_d(GPIO_1[13]),
 					  .inj_a(GPIO_1[31]), .inj_b(GPIO_1[32]),
