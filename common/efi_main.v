@@ -74,7 +74,10 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	always @(posedge clk) begin
 		spi_output_regs[0] <= {15'd0, synced};
-		spi_output_regs[1] <= synced ? 32000000 / rpm_sum[15:0] : 16'd0;
+		// 1 minute takes 120 million cycles
+		// We're averageing 32 teeth width, which means we need 32/60 of minute
+		// 120e6 * 32 / 60 = 64 million
+		spi_output_regs[1] <= synced ? 32'd64_000_000 / rpm_sum[15:0] : 16'd0;
 	end
 	
 	
