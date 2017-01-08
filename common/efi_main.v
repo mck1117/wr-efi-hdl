@@ -25,9 +25,10 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	wire [6:0] spi_addr;
 	
-	wire [15:0] spi_output_regs [15:0];
+	reg [15:0] spi_output_regs [15:0];
+	reg [15:0] spi_output_regs_latched [15:0];
 	wire [15:0] spi_data_out;
-	assign spi_data_out = spi_output_regs[spi_addr];
+	assign spi_data_out = spi_output_regs_latched[spi_addr];
 	
 	reg [15:0] spi_input_regs [15:0];
 	reg [15:0] spi_input_regs_latched [15:0];
@@ -61,10 +62,13 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 		end
 	end
 	
-	// Latch SPI input data to avoid combinational path from fast SPI clock to slow EFI clock
+	// Latch SPI input/output data to avoid long combinational path between clock domains
 	integer i;
 	always @(posedge clk) begin
-		for(i = 0; i < 16; i = i + 1)	spi_input_regs_latched[i] <= spi_input_regs[i];
+		for(i = 0; i < 16; i = i + 1) begin
+			spi_input_regs_latched[i] <= spi_input_regs[i];
+			spi_output_regs_latched[i] <= spi_output_regs[i];
+		end		
 	end
 	
 	spi_slave spi(clk_spi, sck, mosi, miso, cs, spi_addr, spi_data_in, spi_data_out, spi_wr_en);
@@ -147,8 +151,6 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	
 	
-	assign spi_output_regs[0] = {15'd0, synced};
-	assign spi_output_regs[1] = tooth_period[17:2];
 endmodule
 
 
