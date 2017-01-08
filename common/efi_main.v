@@ -71,6 +71,13 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 		end		
 	end
 	
+	
+	always @(posedge clk) begin
+		spi_output_regs[0] <= {15'd0, synced};
+		spi_output_regs[1] <= synced ? 32000000 / rpm_sum[15:0] : 16'd0;
+	end
+	
+	
 	spi_slave spi(clk_spi, sck, mosi, miso, cs, spi_addr, spi_data_in, spi_data_out, spi_wr_en);
 	
 	wire distributor_mode;
@@ -121,9 +128,16 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire trigger;
 	wire [15:0] eng_phase;
 	wire [15:0] next_tooth_length_deg;
+	
+	// Stores how long the previous tooth took, in clock cycles
+	// a tooth of 5.3ms would be 5.3ms * 2000 tick/ms = 10600 count
 	wire [31:0] tooth_period;
 	
 	sync synchronizer(clk, reset_internal, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_tooth_width, conf_teeth_missing, conf_trigger_offset);
+	
+	// RPM averager
+	wire [31:0] rpm_sum;
+	rpm_shift_reg summer(clk, reset_n, trigger, tooth_period, rpm_sum);
 	
 	// ***********************************
 	//          Ignition Drivers
