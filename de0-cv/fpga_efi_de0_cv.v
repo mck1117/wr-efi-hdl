@@ -26,7 +26,7 @@ module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1, LEDR, RESET_N);
 
 	
 	
-	efi_main ctrl(.clk(clk_efi), .clk_spi(clk_spi), .reset(RESET_N),
+	efi_main ctrl(.clk(clk_efi), .clk_spi(clk_spi), .reset_n(RESET_N),
 					  // .vrin(GPIO_1[10]),
 					  .vrin(vrout),
 					  .ign_a(GPIO_1[12]), .ign_b(GPIO_1[11]), .ign_c(GPIO_1[14]), .ign_d(GPIO_1[13]),
