@@ -132,7 +132,10 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	// a tooth of 5.3ms would be 5.3ms * 2000 tick/ms = 10600 count
 	wire [31:0] tooth_period;
 	
-	sync synchronizer(clk, reset_internal, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_teeth_missing);
+	wire vrin_sync;
+	
+	synchronizer vrin_syncer(clk, vrin, vrin_sync);
+	sync synchronizer(clk, reset_internal, vrin_sync, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_teeth_missing);
 	
 	// RPM averager
 	wire [31:0] rpm_sum;
