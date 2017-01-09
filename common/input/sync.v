@@ -1,10 +1,8 @@
-module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, trigger_tooth_cnt, trigger_tooth_width_deg, trigger_teeth_missing, trigger_offset);
+module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, trigger_tooth_cnt, trigger_teeth_missing);
 	input clk, reset_n, vrin;
 	
 	input [15:0] trigger_tooth_cnt;
-	input [15:0] trigger_tooth_width_deg;
 	input [15:0] trigger_teeth_missing;
-	input [15:0] trigger_offset;
 	
 	output reg trigger;
 	output reg [15:0] next_tooth_length_deg;
@@ -80,11 +78,11 @@ module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_de
 							
 							tooth_period <= cnt + 1;
 							
-							eng_phase <= eng_phase + trigger_tooth_width_deg;
+							eng_phase <= eng_phase + 16'd256;	// One tooth is 256 quanta
 						
 							teeth_until_long = teeth_until_long - 1;
 							
-							next_tooth_length_deg = (teeth_until_long == 0) ? ((trigger_teeth_missing + 1) * trigger_tooth_width_deg) : trigger_tooth_width_deg;
+							next_tooth_length_deg = (teeth_until_long == 0) ? ((trigger_teeth_missing + 1) * 16'd256) : 16'd256;
 						end
 					end else if (cnt > (expect_min * 3) && cnt < (expect_max * 3)) begin
 						if(teeth_until_long == 0) begin
@@ -96,9 +94,10 @@ module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_de
 							// Reset tooth counter
 							teeth_until_long <= trigger_tooth_cnt - trigger_teeth_missing - 1;
 							
-							next_tooth_length_deg <= trigger_tooth_width_deg;
+							// The next tooth after the long tooth is always a normal length tooth
+							next_tooth_length_deg <= 16'd256;
 							
-							eng_phase <= trigger_offset;
+							eng_phase <= 16'd0;
 						end else begin
 							st <= 3'd3;
 						
