@@ -40,17 +40,17 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 		if(~reset_internal) begin
 				spi_input_regs[0] = 16'b000_0000_00_11_0111;
 				spi_input_regs[1] = 16'd60;
-				spi_input_regs[2] = 16'd128;
+				spi_input_regs[2] = 16'd256;
 				spi_input_regs[3] = 16'd2;
 				spi_input_regs[4] = 16'd0;
 				spi_input_regs[5] = 16'd7680;
 				spi_input_regs[6] = 16'd0;		// phase a
-				spi_input_regs[7] = 16'd2560;	// phase b
-				spi_input_regs[8] = 16'd5120;	// phase c
+				spi_input_regs[7] = 16'd5120;	// phase b
+				spi_input_regs[8] = 16'd10240;	// phase c
 				spi_input_regs[9] = 16'd0;
 				
-				spi_input_regs[10] = 16'd342;	// 10 deg btdc
-				spi_input_regs[11] = 16'd342;  // 4ms deg dwell
+				spi_input_regs[10] = 16'd10240;	// 10 deg btdc
+				spi_input_regs[11] = 16'd1280;  // 4ms deg dwell
 				
 				spi_input_regs[12] = 16'd2000;	// 1ms pulse width
 				spi_input_regs[13] = 16'd0;		// 0ms pulse (disabled)
