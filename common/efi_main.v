@@ -40,23 +40,20 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 		if(~reset_internal) begin
 				spi_input_regs[0] = 16'b000_0000_00_11_0111;
 				spi_input_regs[1] = 16'd60;
-				spi_input_regs[2] = 16'd256;
-				spi_input_regs[3] = 16'd2;
-				spi_input_regs[4] = 16'd0;
-				spi_input_regs[5] = 16'd7680;
-				spi_input_regs[6] = 16'd0;		// phase a
-				spi_input_regs[7] = 16'd5120;	// phase b
-				spi_input_regs[8] = 16'd10240;	// phase c
-				spi_input_regs[9] = 16'd0;
+				spi_input_regs[2] = 16'd2;
+				spi_input_regs[3] = 16'd0;		// phase a
+				spi_input_regs[4] = 16'd5120;	// phase b
+				spi_input_regs[5] = 16'd10240;	// phase c
+				spi_input_regs[6] = 16'd0;
 				
-				spi_input_regs[10] = 16'd10240;	// 10 deg btdc
-				spi_input_regs[11] = 16'd1280;  // 4ms deg dwell
+				spi_input_regs[7] = 16'd10240;	// 10 deg btdc
+				spi_input_regs[8] = 16'd1280;  // 4ms deg dwell
 				
-				spi_input_regs[12] = 16'd2000;	// 1ms pulse width
-				spi_input_regs[13] = 16'd0;		// 0ms pulse (disabled)
+				spi_input_regs[9] = 16'd1000;	// 1ms pulse width
+				spi_input_regs[10] = 16'd0;		// 0ms pulse (disabled)
 				
-				spi_input_regs[14] = 0;
-				spi_input_regs[15] = 0;
+				spi_input_regs[11] = 0;
+				spi_input_regs[12] = 0;
 		end else begin
 			if(spi_wr_en) spi_input_regs[spi_addr] <= spi_data_in;
 		end
@@ -113,19 +110,19 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	assign { distributor_mode, en_inj, en_ign } = spi_input_regs_latched[0][6:0];
 	
 	assign conf_tooth_cnt = spi_input_regs_latched[1];
-	assign conf_teeth_missing = spi_input_regs_latched[3];
+	assign conf_teeth_missing = spi_input_regs_latched[2];
 	assign conf_quanta_per_rev = conf_tooth_cnt * 16'd256;
 	
-	assign ign_phase_a = spi_input_regs_latched[6];
-	assign ign_phase_b = spi_input_regs_latched[7];
-	assign ign_phase_c = spi_input_regs_latched[8];
-	assign ign_phase_d = spi_input_regs_latched[9];
+	assign ign_phase_a = spi_input_regs_latched[3];
+	assign ign_phase_b = spi_input_regs_latched[4];
+	assign ign_phase_c = spi_input_regs_latched[5];
+	assign ign_phase_d = spi_input_regs_latched[6];
 	
-	assign ign_timing = spi_input_regs_latched[10];
-	assign dwell = spi_input_regs_latched[11];
+	assign ign_timing = spi_input_regs_latched[7];
+	assign dwell = spi_input_regs_latched[8];
 	
-	assign inj_a_pw = spi_input_regs_latched[12];
-	assign inj_b_pw = spi_input_regs_latched[13];
+	assign inj_a_pw = spi_input_regs_latched[9];
+	assign inj_b_pw = spi_input_regs_latched[10];
 	
 	// ***********************************
 	//            Synchronizer
