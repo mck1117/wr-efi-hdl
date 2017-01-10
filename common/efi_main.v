@@ -72,12 +72,15 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	end
 	
 	
+	wire [15:0] rpm;
+	
 	always @(posedge clk) begin
 		spi_output_regs[0] <= {15'd0, synced};
 		spi_output_regs[1] <= synced ? rpm : 16'd0;
 	end
 	
-	wire [15:0] rpm;
+	
+	wire [31:0] rpm_sum;
 	
 	// 1 minute takes 120 million cycles
 	// We're averageing 32 teeth width, which means we need 32/60 of minute
@@ -142,7 +145,6 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	sync synchronizer(clk, reset_internal, vrin_sync, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_teeth_missing);
 	
 	// RPM averager
-	wire [31:0] rpm_sum;
 	rpm_shift_reg summer(clk, reset_n, trigger, tooth_period, rpm_sum);
 	
 	// ***********************************
