@@ -43,7 +43,7 @@ module ign_timer(clk, reset_n, trigger, timing, eng_phase, next_tooth_width, too
 				if(timing > eng_phase && timing <= (eng_phase + next_tooth_width + 20)) begin
 					cnt <= 0;
 					//cnt_trigger = (tooth_period * (timing - (eng_phase << 3))) / 48 - 3;
-					cnt_trigger = ((tooth_period * quanta_until_expiry) >> 8) - 4;
+					cnt_trigger = ((tooth_period * quanta_until_expiry) >> 8) - 6;
 					cnt_running <= 1;
 				end
 			end
