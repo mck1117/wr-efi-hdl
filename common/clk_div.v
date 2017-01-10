@@ -11,7 +11,7 @@ module clk_div(clk_in, clk_out);
 	initial cnt = 0;
 	
 	always @(posedge clk_in) begin
-		if(cnt == RATIO / 2) begin
+		if(cnt == RATIO / 2 - 1) begin
 			clk_out = ~clk_out;
 			cnt <= 0;
 		end else begin
