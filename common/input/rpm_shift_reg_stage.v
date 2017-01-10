@@ -8,9 +8,11 @@ module rpm_shift_reg_stage(clk, reset, en, d, q, sum_in, sum_out);
 	output reg [INPUT_WIDTH - 1:0] q = {INPUT_WIDTH{1'b0}};
 	
 	input [SUM_WIDTH - 1:0] sum_in;
-	output [SUM_WIDTH - 1:0] sum_out;
+	output reg [SUM_WIDTH - 1:0] sum_out;
 	
-	assign sum_out = sum_in + q;
+	always @(posedge clk) begin
+		sum_out <= sum_in + d;
+	end
 	
 	always @(posedge clk) begin
 		if(~reset) begin
