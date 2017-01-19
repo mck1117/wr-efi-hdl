@@ -36,24 +36,21 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	wire spi_wr_en;
 	
+	
+	
+	initial begin
+		// Disable all outputs at reset
+		spi_input_regs[0] = 16'd0;
+	end
+	
+	
+	
+	
+	
 	always @(posedge clk_spi) begin
 		if(~reset_internal) begin
-				spi_input_regs[0] = 16'b000_0000_00_11_0111;
-				spi_input_regs[1] = 16'd60;
-				spi_input_regs[2] = 16'd2;
-				spi_input_regs[3] = 16'd0;		// phase a
-				spi_input_regs[4] = 16'd5120;	// phase b
-				spi_input_regs[5] = 16'd10240;	// phase c
-				spi_input_regs[6] = 16'd0;
-				
-				spi_input_regs[7] = 16'd10240;	// 10 deg btdc
-				spi_input_regs[8] = 16'd1280;  // 4ms deg dwell
-				
-				spi_input_regs[9] = 16'd1000;	// 1ms pulse width
-				spi_input_regs[10] = 16'd0;		// 0ms pulse (disabled)
-				
-				spi_input_regs[11] = 0;
-				spi_input_regs[12] = 0;
+				// Disable all outputs at reset
+				spi_input_regs[0] = 16'd0;
 		end else begin
 			if(spi_wr_en) spi_input_regs[spi_addr] <= spi_data_in;
 		end
