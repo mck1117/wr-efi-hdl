@@ -13,7 +13,7 @@ module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1, LEDR, RESET_N);
 	
 	// divide SPI clock / 50, 7 bit counter
 	// clk_efi = 2mhz
-	clk_div #(50, 7) efi_divider(clk_spi, clk_efi);
+	clk_div #(100, 7) efi_divider(clk_spi, clk_efi);
 	
 	assign LEDR[3:0] = { GPIO_1[13], GPIO_1[14], GPIO_1[11], GPIO_1[12]};
 	assign LEDR[5:4] = { GPIO_1[32], GPIO_1[31] };
