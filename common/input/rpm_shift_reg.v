@@ -1,7 +1,7 @@
 module rpm_shift_reg(clk, reset, en, input_sample, output_sum);
 	parameter LENGTH_INPUT = 16;
 	parameter LENGTH_SUM = 32;
-	parameter COUNT_SUMS = 32;
+	parameter COUNT_SUMS = 16;
 	
 	input clk, reset, en;
 	
