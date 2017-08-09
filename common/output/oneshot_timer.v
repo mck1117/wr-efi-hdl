@@ -10,7 +10,7 @@ module oneshot_timer(clk, reset_n, trigger, out, trigger_count);
 
     reg cnt_en = 0;
 
-    assign out = counter >= trigger_count;
+    assign out = counter > trigger_count;
 
     always @(posedge clk) begin
         // Handle reset
@@ -26,7 +26,7 @@ module oneshot_timer(clk, reset_n, trigger, out, trigger_count);
                 counter <= counter + 1;
             end
 
-            if(counter >= trigger_count) begin
+            if(counter > trigger_count) begin
                 cnt_en <= 0;
             end
         end
