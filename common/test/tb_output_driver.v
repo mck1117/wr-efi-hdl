@@ -19,7 +19,7 @@ module tb_output_driver();
 	
 	wire synced;
 
-	sync dut_sync(clk, 1'b1, vrin, eng_phase, trigger, synced, 8'd60, 8'd2);
+	sync dut_sync(clk, 1'b1, vrin, eng_phase, trigger, synced, tooth_period, 8'd60, 8'd2);
 	
 	output_driver dut_output(clk, 1'b1, synced, eng_phase, trigger, 8'd30, 8'd30, 24'd1000, 24'd5000, ign_a);
 	
