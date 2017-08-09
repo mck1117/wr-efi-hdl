@@ -1,12 +1,14 @@
 module spi_slave(clk, sck, mosi, miso, cs, addr, data_in, data_out, wr_en);
+	parameter DATA_REGISTER_LENGTH = 64;
+	
 	input clk;
 	input sck, mosi, cs;
 	output miso;
 	
 	output reg [6:0] addr;
 	initial addr = 7'bxxxxxxx;
-	output [15:0] data_in;
-	input [15:0] data_out;
+	output [DATA_REGISTER_LENGTH - 1:0] data_in;
+	input [DATA_REGISTER_LENGTH - 1:0] data_out;
 	output wr_en;
 	
 	reg [4:0] bit_idx;
@@ -17,8 +19,8 @@ module spi_slave(clk, sck, mosi, miso, cs, addr, data_in, data_out, wr_en);
 	reg cs_internal;
 	initial cs_internal = 1;
 	
-	spi_output #(18) spio(clk, sck, miso, cs_internal, {2'b0, data_out});
-	spi_input #(16) spii(clk, sck, mosi, cs_internal, data_in);
+	spi_output #(DATA_REGISTER_LENGTH + 2) spio(clk, sck, miso, cs_internal, {2'b0, data_out});
+	spi_input #(DATA_REGISTER_LENGTH) spii(clk, sck, mosi, cs_internal, data_in);
 	
 	wire cs_trigger_fall, cs_trigger_rise;
 	edge_det edcsr(clk, ~cs, cs_trigger_fall);
