@@ -1,29 +1,26 @@
-module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, trigger_tooth_cnt, trigger_teeth_missing);
+module sync(clk, reset_n, vrin, last_tooth_num, trigger, synced, tooth_period, trigger_tooth_cnt, trigger_teeth_missing);
 	input clk, reset_n, vrin;
 	
-	input [15:0] trigger_tooth_cnt;
-	input [15:0] trigger_teeth_missing;
+	input [7:0] trigger_tooth_cnt;
+	input [7:0] trigger_teeth_missing;
 	
 	output reg trigger;
-	output reg [15:0] next_tooth_length_deg;
 	
-	output reg [15:0] eng_phase;
-	
-	initial eng_phase <= 0;
+	output reg [7:0] last_tooth_num = 0;
 	
 	reg [31:0] cnt = 32'h0;
-	output reg [31:0] tooth_period;
+	output reg [31:0] tooth_period = 32'd0;
 	
 	wire vr_edge;
 	
 	edge_det vr_edge_det(clk, vrin, vr_edge);
-	
+
 	
 	reg [31:0] expect_min, expect_max;
 	output reg synced;
 	initial synced <= 0;
 	
-	
+
 	initial expect_min = 0;
 	initial expect_max = 32'hffffffff;
 	
@@ -38,9 +35,8 @@ module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_de
 	always @(posedge clk) begin
 		if(~reset_n) begin
 			trigger <= 0;
-			next_tooth_length_deg <= 16'd0;
-			eng_phase <= 16'd0;
-			cnt <= 16'd0;
+			last_tooth_num <= 8'd0;
+			cnt <= 32'd0;
 			tooth_period <= 16'd0;
 			expect_min = 0;
 			expect_max = 32'hffffffff;
@@ -77,12 +73,10 @@ module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_de
 							st <= 3'd1;
 							
 							tooth_period <= cnt + 1;
-							
-							eng_phase <= eng_phase + 16'd256;	// One tooth is 256 quanta
+
+							last_tooth_num <= last_tooth_num + 8'd1;	// Add one tooth
 						
 							teeth_until_long = teeth_until_long - 1;
-							
-							next_tooth_length_deg = (teeth_until_long == 0) ? ((trigger_teeth_missing + 1) * 16'd256) : 16'd256;
 						end
 					end else if (cnt > (expect_min * 3) && cnt < (expect_max * 3)) begin
 						if(teeth_until_long == 0) begin
@@ -93,11 +87,8 @@ module sync(clk, reset_n, vrin, eng_phase, trigger, synced, next_tooth_length_de
 							
 							// Reset tooth counter
 							teeth_until_long <= trigger_tooth_cnt - trigger_teeth_missing - 1;
-							
-							// The next tooth after the long tooth is always a normal length tooth
-							next_tooth_length_deg <= 16'd256;
-							
-							eng_phase <= 16'd0;
+														
+							last_tooth_num <= 8'd0;
 						end else begin
 							st <= 3'd3;
 						
