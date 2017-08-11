@@ -1,8 +1,6 @@
 module rs_latch(r, s, q);
 	input r, s;
-	output reg q;
-	
-	initial q <= 0;
+	output reg q = 0;
 	
 	always @(*) begin
 		q <= q;
