@@ -33,7 +33,7 @@ module output_driver(clk, reset_n, en, tooth_num, tooth_edge, start_tooth, end_t
 	oneshot_timer tm_falling(clk, reset_n & timers_rst, timer_falling_trigger, timer_output_falling, end_counts_latched);
 	
 	// Latch the timer results
-	rs_latch ltch(timer_output_rising, timer_output_falling, out);
+	rs_latch ltch(timer_output_falling, timer_output_rising, out);
 	
 	
 	always @(posedge clk) begin
