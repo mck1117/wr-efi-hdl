@@ -25,14 +25,14 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	wire [6:0] spi_addr;
 	
-	reg [15:0] spi_output_regs [15:0];
-	reg [15:0] spi_output_regs_latched [15:0];
-	wire [15:0] spi_data_out;
+	reg [63:0] spi_output_regs [15:0];
+	reg [63:0] spi_output_regs_latched [15:0];
+	wire [63:0] spi_data_out;
 	assign spi_data_out = spi_output_regs_latched[spi_addr];
 	
-	reg [15:0] spi_input_regs [15:0];
-	reg [15:0] spi_input_regs_latched [15:0];
-	wire [15:0] spi_data_in;
+	reg [63:0] spi_input_regs [15:0];
+	reg [63:0] spi_input_regs_latched [15:0];
+	wire [63:0] spi_data_in;
 	
 	wire spi_wr_en;
 	
@@ -40,7 +40,7 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	initial begin
 		// Disable all outputs at reset
-		spi_input_regs[0] = 16'd0;
+		spi_input_regs[0] = 64'd0;
 	end
 	
 	
@@ -49,22 +49,17 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	
 	always @(posedge clk_spi) begin
 		if(~reset_internal) begin
-				spi_input_regs[0] = 16'b000_0000_00_11_0111;
-				spi_input_regs[1] = 16'd24;
-				spi_input_regs[2] = 16'd1;
-				spi_input_regs[3] = 16'd0;		// phase a
-				spi_input_regs[4] = 16'd2048;	// phase b
-				spi_input_regs[5] = 16'd4096;	// phase c
-				spi_input_regs[6] = 16'd0;		// phase d
+				spi_input_regs[0] = 64'b000_0000_00_11_0111;
+				spi_input_regs[1] = 64'd60;	// teeth per rev
+				spi_input_regs[2] = 64'd2;	// missing teeth
+
+				spi_input_regs[3] = { 8'd57, 8'd1, 24'd0, 24'd0 };	// start/end tooth + start/end counts
+				spi_input_regs[4] = { 8'd4, 8'd5, 24'd0, 24'd0 };	// start/end tooth + start/end counts
+				spi_input_regs[5] = { 8'd8, 8'd9, 24'd0, 24'd0 };	// start/end tooth + start/end counts
+				spi_input_regs[6] = { 8'd12, 8'd13, 24'd0, 24'd0 };	// start/end tooth + start/end counts
 				
-				spi_input_regs[7] = 16'd0;	// 10 deg btdc
-				spi_input_regs[8] = 16'd512;  // 4ms deg dwell
-				
-				spi_input_regs[9] = 16'd1000;	// 1ms pulse width
-				spi_input_regs[10] = 16'd0;		// 0ms pulse (disabled)
-				
-				spi_input_regs[11] = 0;
-				spi_input_regs[12] = 0;
+//				spi_input_regs[11] = 0;
+//				spi_input_regs[12] = 0;
 		end else begin
 			if(spi_wr_en) spi_input_regs[spi_addr] <= spi_data_in;
 		end
@@ -80,21 +75,13 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	end
 	
 	
-	wire [15:0] rpm;
-	
+	wire [31:0] rpm_sum;
+
 	always @(posedge clk) begin
 		spi_output_regs[0] <= {15'd0, synced};
-		spi_output_regs[1] <= synced ? rpm : 16'd0;
+		spi_output_regs[1] <= synced ? (rpm_sum[31:16]) : 16'd0;
 	end
 	
-	
-	wire [31:0] rpm_sum;
-	
-	// 1 minute takes 120 million cycles
-	// We're averageing 32 teeth width, which means we need 32/24 of minute
-	// 120e6 * 32 / 24 = 160 million		
-	assign rpm = 32'd80_000_000 / rpm_sum[19:0];
-			
 	
 	spi_slave spi(clk_spi, sck, mosi, miso, cs, spi_addr, spi_data_in, spi_data_out, spi_wr_en);
 	
@@ -103,45 +90,28 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire [1:0] en_inj;
 	wire [3:0] en_ign;
 	
-	wire [15:0] conf_tooth_cnt;		// How many teeth are there?
-	wire [15:0] conf_teeth_missing;	// How many teeth are missing?
-	wire [15:0] conf_quanta_per_rev;	// How many quanta in a full rev?
+	wire [7:0] conf_tooth_cnt;		// How many teeth are there?
+	wire [7:0] conf_teeth_missing;	// How many teeth are missing?
 	
-	wire [15:0] ign_phase_a;	// Cylinder phasing, quanta, relative to 0*
-	wire [15:0] ign_phase_b;	// Cylinder phasing, quanta, relative to 0*
-	wire [15:0] ign_phase_c;	// Cylinder phasing, quanta, relative to 0*
-	wire [15:0] ign_phase_d;	// Cylinder phasing, quanta, relative to 0*
-	
-	wire [15:0] ign_timing;		// Ignition timing, quanta
-	wire [15:0] dwell;			// Dwell, quanta
-	
-	wire [15:0] inj_a_pw, inj_b_pw;
-	
+	wire [7:0] ign_a_start_tooth, ign_a_end_tooth, ign_b_start_tooth, ign_b_end_tooth, ign_c_start_tooth, ign_c_end_tooth, ign_d_start_tooth, ign_d_end_tooth;
+	wire [23:0] ign_a_start_count, ign_a_end_count, ign_b_start_count, ign_b_end_count, ign_c_start_count, ign_c_end_count, ign_d_start_count, ign_d_end_count;
 	
 	assign { distributor_mode, en_inj, en_ign } = spi_input_regs_latched[0][6:0];
 	
 	assign conf_tooth_cnt = spi_input_regs_latched[1];
 	assign conf_teeth_missing = spi_input_regs_latched[2];
-	assign conf_quanta_per_rev = conf_tooth_cnt * 16'd256;
 	
-	assign ign_phase_a = spi_input_regs_latched[3];
-	assign ign_phase_b = spi_input_regs_latched[4];
-	assign ign_phase_c = spi_input_regs_latched[5];
-	assign ign_phase_d = spi_input_regs_latched[6];
-	
-	assign ign_timing = spi_input_regs_latched[7];
-	assign dwell = spi_input_regs_latched[8];
-	
-	assign inj_a_pw = spi_input_regs_latched[9];
-	assign inj_b_pw = spi_input_regs_latched[10];
+	assign { ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count } = spi_input_regs_latched[3];	// Channel A settings
+	assign { ign_b_start_tooth, ign_b_end_tooth, ign_b_start_count, ign_b_end_count } = spi_input_regs_latched[4];	// Channel B settings
+	assign { ign_c_start_tooth, ign_c_end_tooth, ign_c_start_count, ign_c_end_count } = spi_input_regs_latched[5];	// Channel C settings
+	assign { ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count } = spi_input_regs_latched[6];	// Channel D settings
 	
 	// ***********************************
 	//            Synchronizer
 	// ***********************************
 	
 	wire trigger;
-	wire [15:0] eng_phase;
-	wire [15:0] next_tooth_length_deg;
+	wire [7:0] eng_phase;
 	
 	// Stores how long the previous tooth took, in clock cycles
 	// a tooth of 5.3ms would be 5.3ms * 2000 tick/ms = 10600 count
@@ -150,10 +120,10 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire vrin_sync;
 	
 	synchronizer vrin_syncer(clk, vrin, vrin_sync);
-	sync synchronizer(clk, reset_internal, vrin_sync, eng_phase, trigger, synced, next_tooth_length_deg, tooth_period, conf_tooth_cnt, conf_teeth_missing);
+	sync synchronizer(clk, reset_internal, vrin_sync, eng_phase, trigger, synced, tooth_period, conf_tooth_cnt, conf_teeth_missing);
 	
 	// RPM averager
-	rpm_shift_reg summer(clk, reset_n, trigger, tooth_period, rpm_sum);
+	rpm_shift_reg summer(clk, reset_n, trigger, tooth_period[15:0], rpm_sum);
 	
 	// ***********************************
 	//          Ignition Drivers
@@ -167,17 +137,17 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	assign ign_c = distributor_mode ? 1'b0 : ign_c_internal;
 	assign ign_d = distributor_mode ? 1'b0 : ign_d_internal;
 	
-	ign_driver ignm_a(clk, reset_internal, synced & en_ign[0], trigger, eng_phase, ign_timing, dwell, ign_phase_a, ign_a_internal, next_tooth_length_deg, rpm_sum / 16, conf_quanta_per_rev);
-	ign_driver ignm_b(clk, reset_internal, synced & en_ign[1], trigger, eng_phase, ign_timing, dwell, ign_phase_b, ign_b_internal, next_tooth_length_deg, rpm_sum / 16, conf_quanta_per_rev);
-	ign_driver ignm_c(clk, reset_internal, synced & en_ign[2], trigger, eng_phase, ign_timing, dwell, ign_phase_c, ign_c_internal, next_tooth_length_deg, rpm_sum / 16, conf_quanta_per_rev);
-	ign_driver ignm_d(clk, reset_internal, synced & en_ign[3], trigger, eng_phase, ign_timing, dwell, ign_phase_d, ign_d_internal, next_tooth_length_deg, rpm_sum / 16, conf_quanta_per_rev);
-	
+	output_driver ignm_a(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count, ign_a_internal);
+	output_driver ignm_b(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_b_start_tooth, ign_b_end_tooth, ign_b_start_count, ign_b_end_count, ign_b_internal);
+	output_driver ignm_c(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_c_start_tooth, ign_c_end_tooth, ign_c_start_count, ign_c_end_count, ign_c_internal);
+	output_driver ignm_d(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count, ign_d_internal);
+
 	// ***********************************
 	//          Injector Drivers
 	// ***********************************
 	
-	inj_driver injm_a(clk, reset_internal, synced & en_inj[0], trigger, eng_phase, 1'b0, {16'd0, inj_a_pw}, inj_a);
-	inj_driver injm_b(clk, reset_internal, synced & en_inj[1], trigger, eng_phase, 1'b0, {16'd0, inj_b_pw}, inj_b);
+	//inj_driver injm_a(clk, reset_internal, synced & en_inj[0], trigger, eng_phase, 1'b0, {16'd0, inj_a_pw}, inj_a);
+	//inj_driver injm_b(clk, reset_internal, synced & en_inj[1], trigger, eng_phase, 1'b0, {16'd0, inj_b_pw}, inj_b);
 	
 	
 	
