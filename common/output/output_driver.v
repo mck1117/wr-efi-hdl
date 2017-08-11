@@ -20,8 +20,8 @@ module output_driver(clk, reset_n, en, tooth_num, tooth_edge, start_tooth, end_t
 	
 	wire timer_output_rising, timer_output_falling;
 	
-	reg [timer_length-1:0] start_counts_latched, end_counts_latched;
-	reg [7:0] end_tooth_latched;
+	reg [timer_length-1:0] start_counts_latched = 0, end_counts_latched = 0;
+	reg [7:0] end_tooth_latched = 0;
 	
 	reg timer_rising_trigger = 0;
 	reg timer_falling_trigger = 0;
