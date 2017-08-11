@@ -25,7 +25,7 @@ module tb_efi();
 
 	initial begin
 		rst_n = 0;
-		#91366000 rst_n = 1;
+		#1000000 rst_n = 1;
 	end
 	
 	
