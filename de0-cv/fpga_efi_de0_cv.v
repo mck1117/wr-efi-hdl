@@ -8,13 +8,16 @@ module fpga_efi_de0_cv(CLOCK_50, CLOCK2_50, GPIO_1, LEDR, RESET_N);
 	
 	wire clk_spi, clk_efi;
 	
-	pll_spi p1(CLOCK_50, 1'b0, clk_spi);		// Generates clock for SPI, 100mhz
-	pll_mcu p3(CLOCK2_50, 1'b0, GPIO_1[5], GPIO_1[7]);	// Generates STM32 clock input
+	assign clk_spi = CLOCK_50;
+	//pll_spi p1(CLOCK_50, 1'b0, clk_spi);		// Generates clock for SPI, 100mhz
+	//pll_mcu p3(CLOCK2_50, 1'b0, GPIO_1[5], GPIO_1[7]);	// Generates STM32 clock input
 	
 	// divide SPI clock / 50, 7 bit counter
 	// clk_efi = 2mhz
-	clk_div #(100, 7) efi_divider(clk_spi, clk_efi);
+	//clk_div #(100, 7) efi_divider(clk_spi, clk_efi);
 		
+	assign clk_efi = clk_spi;
+
 	// Mirror VR input to LEDR[9], for diagnostic
 	assign LEDR[9] = GPIO_1[10];
 	

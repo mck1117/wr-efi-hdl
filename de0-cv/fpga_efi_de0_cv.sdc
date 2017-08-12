@@ -24,10 +24,10 @@
 # Clock constraints
 
 
-create_generated_clock -divide_by 100 -source [get_pins {p1|pll_spi_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -name "clk_efi" [get_nets {efi_divider|clk_out}]
+#create_generated_clock -divide_by 100 -source [get_pins {p1|pll_spi_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -name "clk_efi" [get_nets {efi_divider|clk_out}]
 
-#create_clock -name "CLOCK_50" -period 20.000ns [get_ports {CLOCK_50}]
-#create_clock -name "CLOCK2_50" -period 20.000ns [get_ports {CLOCK2_50}]
+create_clock -name "CLOCK_50" -period 20.000ns [get_ports {CLOCK_50}]
+create_clock -name "CLOCK2_50" -period 20.000ns [get_ports {CLOCK2_50}]
 
 
 # Automatically constrain PLL and other generated clocks
