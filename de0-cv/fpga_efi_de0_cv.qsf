@@ -387,7 +387,7 @@ set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
 set_global_assignment -name POWER_USE_DEVICE_CHARACTERISTICS MAXIMUM
 set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name OPTIMIZATION_MODE "AGGRESSIVE PERFORMANCE"
+set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
 set_global_assignment -name FLOW_ENABLE_POWER_ANALYZER ON
 set_global_assignment -name POWER_DEFAULT_INPUT_IO_TOGGLE_RATE 40%
 set_global_assignment -name REMOVE_REDUNDANT_LOGIC_CELLS ON
@@ -405,6 +405,8 @@ set_global_assignment -name ROUTER_CLOCKING_TOPOLOGY_ANALYSIS ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC_FOR_AREA ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION ON
 set_global_assignment -name ADV_NETLIST_OPT_SYNTH_WYSIWYG_REMAP ON
+set_global_assignment -name SAVE_DISK_SPACE OFF
+set_global_assignment -name VERILOG_FILE ../common/output/distributor_mode_selector.v
 set_global_assignment -name VERILOG_FILE ../common/output/output_driver.v
 set_global_assignment -name VERILOG_FILE ../common/output/oneshot_timer.v
 set_global_assignment -name VERILOG_FILE ../common/efi_main.v
