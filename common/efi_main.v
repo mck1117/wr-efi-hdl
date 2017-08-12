@@ -1,6 +1,9 @@
-module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced, sck, miso, mosi, cs);
+module efi_main(clk, reset_n, clk_spi, vrin, ign, synced, sck, miso, mosi, cs);
+	parameter OUTPUT_CHANNELS = 8;
+
 	input clk, reset_n, vrin;
-	output ign_a, ign_b, ign_c, ign_d, inj_a, inj_b, synced;
+	output [OUTPUT_CHANNELS - 1:0] ign;
+	output synced;
 
 	input clk_spi;
 	
@@ -88,23 +91,32 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	wire distributor_mode;
 	
 	wire [1:0] en_inj;
-	wire [3:0] en_ign;
+	wire [OUTPUT_CHANNELS - 1:0] en_ign;
 	
 	wire [7:0] conf_tooth_cnt;		// How many teeth are there?
 	wire [7:0] conf_teeth_missing;	// How many teeth are missing?
 	
-	wire [7:0] ign_a_start_tooth, ign_a_end_tooth, ign_b_start_tooth, ign_b_end_tooth, ign_c_start_tooth, ign_c_end_tooth, ign_d_start_tooth, ign_d_end_tooth;
-	wire [23:0] ign_a_start_count, ign_a_end_count, ign_b_start_count, ign_b_end_count, ign_c_start_count, ign_c_end_count, ign_d_start_count, ign_d_end_count;
+	wire [7:0] ign_start_tooth [OUTPUT_CHANNELS - 1:0];
+	wire [7:0] ign_end_tooth [OUTPUT_CHANNELS - 1:0];
+	wire [23:0] ign_start_count [OUTPUT_CHANNELS - 1:0];
+	wire [23:0] ign_end_count [OUTPUT_CHANNELS - 1:0];
+
+	assign en_ign = spi_input_regs_latched[0][OUTPUT_CHANNELS - 1:0];
+	assign distributor_mode = spi_input_regs_latched[0][31];
 	
-	assign { distributor_mode, en_inj, en_ign } = spi_input_regs_latched[0][6:0];
+	assign conf_tooth_cnt = spi_input_regs_latched[1][7:0];
+	assign conf_teeth_missing = spi_input_regs_latched[2][7:0];
 	
-	assign conf_tooth_cnt = spi_input_regs_latched[1];
-	assign conf_teeth_missing = spi_input_regs_latched[2];
-	
-	assign { ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count } = spi_input_regs_latched[3];	// Channel A settings
+	genvar i_args;
+
+	generate for (i_args = 0; i_args < OUTPUT_CHANNELS; i_args = i_args + 1) begin : gen_loop2
+		assign { ign_start_tooth[i_args], ign_end_tooth[i_args], ign_start_count[i_args], ign_end_count[i_args] } = spi_input_regs_latched[i_args + 3];	// Channel A settings
+	end endgenerate
+
+	/*assign { ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count } = spi_input_regs_latched[3];	// Channel A settings
 	assign { ign_b_start_tooth, ign_b_end_tooth, ign_b_start_count, ign_b_end_count } = spi_input_regs_latched[4];	// Channel B settings
 	assign { ign_c_start_tooth, ign_c_end_tooth, ign_c_start_count, ign_c_end_count } = spi_input_regs_latched[5];	// Channel C settings
-	assign { ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count } = spi_input_regs_latched[6];	// Channel D settings
+	assign { ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count } = spi_input_regs_latched[6];	// Channel D settings*/
 	
 	// ***********************************
 	//            Synchronizer
@@ -129,18 +141,23 @@ module efi_main(clk, reset_n, clk_spi, vrin, ign_a, ign_b, ign_c, ign_d, inj_a, 
 	//          Ignition Drivers
 	// ***********************************
 	
-	wire ign_a_internal, ign_b_internal, ign_c_internal, ign_d_internal;
+	wire [OUTPUT_CHANNELS - 1:0] ign_internal;
+
+	// Distributor mode handler
+	distributor_mode_selector #(OUTPUT_CHANNELS) dizzy_selector(ign_internal, ign, distributor_mode);
 	
-	// If in distributor mode, OR all outputs to the A channel, and disable the rest
-	assign ign_a = distributor_mode ? (ign_a_internal | ign_b_internal | ign_c_internal | ign_d_internal) : ign_a_internal;
-	assign ign_b = distributor_mode ? 1'b0 : ign_b_internal;
-	assign ign_c = distributor_mode ? 1'b0 : ign_c_internal;
-	assign ign_d = distributor_mode ? 1'b0 : ign_d_internal;
-	
-	output_driver ignm_a(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count, ign_a_internal);
+
+	// array of ign drivers
+	genvar i_drivers;
+
+	generate for (i_drivers = 0; i_drivers < OUTPUT_CHANNELS; i_drivers = i_drivers + 1) begin : generate_drivers
+		output_driver ingm (clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_start_tooth[i_drivers], ign_end_tooth[i_drivers], ign_start_count[i_drivers], ign_end_count[i_drivers], ign_internal[i_drivers]);
+	end endgenerate
+
+	/*output_driver ignm_a(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_a_start_tooth, ign_a_end_tooth, ign_a_start_count, ign_a_end_count, ign_a_internal);
 	output_driver ignm_b(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_b_start_tooth, ign_b_end_tooth, ign_b_start_count, ign_b_end_count, ign_b_internal);
 	output_driver ignm_c(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_c_start_tooth, ign_c_end_tooth, ign_c_start_count, ign_c_end_count, ign_c_internal);
-	output_driver ignm_d(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count, ign_d_internal);
+	output_driver ignm_d(clk, reset_internal, synced & en_ign[0], eng_phase, trigger, ign_d_start_tooth, ign_d_end_tooth, ign_d_start_count, ign_d_end_count, ign_d_internal);*/
 
 	// ***********************************
 	//          Injector Drivers
